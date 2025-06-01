@@ -69,29 +69,45 @@ try:
     ).properties(width=400, height=400)
     st.altair_chart(chart_genero)
 
-    # 🔹 INTENCIÓN DE VOTO POR GÉNERO
+  # INTENCIÓN DE VOTO POR GÉNERO CON SELECTBOX
     st.subheader("🗳️ Intención de voto por género")
-    voto_genero = df.groupby(["p3", "p4"]).size().reset_index(name="Cantidad")
-    chart_vg = alt.Chart(voto_genero).mark_bar().encode(
-        x=alt.X("p4:N", title="Candidato"),
-        y="Cantidad:Q",
-        color="p3:N",
-        column=alt.Column("p3:N", title="Género"),
-        tooltip=["p3", "p4", "Cantidad"]
-    ).properties(width=180, height=300)
+
+    generos_disponibles = df["p3"].dropna().unique().tolist()
+    genero_seleccionado = st.selectbox("Selecciona un género", generos_disponibles, index=0)
+
+    voto_genero_filtrado = df[df["p3"] == genero_seleccionado]
+    voto_genero_data = voto_genero_filtrado["p4"].value_counts().reset_index()
+    voto_genero_data.columns = ["Candidato", "Cantidad"]
+
+    chart_vg = alt.Chart(voto_genero_data).mark_bar().encode(
+        x='Candidato:N',
+        y='Cantidad:Q',
+        color='Candidato:N',
+        tooltip=['Candidato', 'Cantidad']
+    ).properties(width=600)
+
     st.altair_chart(chart_vg, use_container_width=True)
 
-    # 🔹 INTENCIÓN DE VOTO POR RANGO DE EDAD
+
+# INTENCIÓN DE VOTO POR RANGO DE EDAD CON SELECTBOX
     st.subheader("📈 Intención de voto por rango de edad")
-    voto_edad = df.groupby(["RangoEdad", "p4"]).size().reset_index(name="Cantidad")
-    chart_ve = alt.Chart(voto_edad).mark_bar().encode(
-        x=alt.X("p4:N", title="Candidato"),
-        y="Cantidad:Q",
-        color="RangoEdad:N",
-        column=alt.Column("RangoEdad:N", title="Edad"),
-        tooltip=["RangoEdad", "p4", "Cantidad"]
-    ).properties(width=180, height=300)
+
+    rangos_disponibles = df["RangoEdad"].dropna().unique().tolist()
+    rango_seleccionado = st.selectbox("Selecciona un rango de edad", rangos_disponibles, index=0)
+
+    voto_edad_filtrado = df[df["RangoEdad"] == rango_seleccionado]
+    voto_edad_data = voto_edad_filtrado["p4"].value_counts().reset_index()
+    voto_edad_data.columns = ["Candidato", "Cantidad"]
+
+    chart_ve = alt.Chart(voto_edad_data).mark_bar().encode(
+        x='Candidato:N',
+        y='Cantidad:Q',
+        color='Candidato:N',
+        tooltip=['Candidato', 'Cantidad']
+    ).properties(width=600)
+
     st.altair_chart(chart_ve, use_container_width=True)
+
 
     # 🔹 INTENCIÓN DE VOTO GENERAL
     st.subheader("📌 Intención de voto general")
