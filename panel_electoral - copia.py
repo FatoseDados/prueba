@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -18,12 +19,10 @@ try:
     df = pd.read_csv(url)
 
     st.success("Datos cargados correctamente.")
-    st.markdown(f"Total de registros: **{len(df)}**")
+    st.markdown("Total de registros: **{}**".format(len(df)))
 
-    # NORMALIZACIÓN DE COLUMNAS
+    # CONVERSIÓN DE TIPOS
     df.columns = df.columns.str.strip()
-
-    # CONVERSIÓN DE EDAD
     df["p2"] = pd.to_numeric(df["p2"], errors="coerce")
     df.dropna(subset=["p2"], inplace=True)
 
@@ -40,89 +39,89 @@ try:
 
     df["RangoEdad"] = df["p2"].apply(clasificar_edad)
 
-    # 🔹 DISTRIBUCIÓN POR RANGO DE EDAD
+    # DISTRIBUCIÓN DE VOTANTES POR EDAD
     st.subheader("📊 Distribución de votantes por rango de edad")
-    edades = df["RangoEdad"].value_counts().reset_index()
-    edades.columns = ["Rango de Edad", "Cantidad"]
-    edades["Porcentaje"] = (edades["Cantidad"] / edades["Cantidad"].sum() * 100).round(2)
+    edades = df["RangoEdad"].value_counts(normalize=True).reset_index()
+    edades.columns = ["Rango de Edad", "Porcentaje"]
+    edades["Porcentaje"] = (edades["Porcentaje"] * 100).round(2)
     st.dataframe(edades)
 
     chart_edad = alt.Chart(edades).mark_bar().encode(
-        x=alt.X("Rango de Edad", sort=["18-29", "30-44", "45-59", "60+"]),
-        y="Cantidad:Q",
-        color="Rango de Edad:N",
-        tooltip=["Rango de Edad", "Cantidad", "Porcentaje"]
+        x="Rango de Edad",
+        y="Porcentaje",
+        color="Rango de Edad",
+        tooltip=["Rango de Edad", "Porcentaje"]
     ).properties(width=600)
     st.altair_chart(chart_edad, use_container_width=True)
 
-    # 🔹 DISTRIBUCIÓN POR GÉNERO
+    # DISTRIBUCIÓN POR GÉNERO
     st.subheader("🧍 Distribución de votantes por género")
-    genero = df["p3"].value_counts().reset_index()
-    genero.columns = ["Género", "Cantidad"]
-    genero["Porcentaje"] = (genero["Cantidad"] / genero["Cantidad"].sum() * 100).round(2)
+    genero = df["p3"].value_counts(normalize=True).reset_index()
+    genero.columns = ["Género", "Porcentaje"]
+    genero["Porcentaje"] = (genero["Porcentaje"] * 100).round(2)
     st.dataframe(genero)
 
     chart_genero = alt.Chart(genero).mark_arc(innerRadius=50).encode(
-        theta="Cantidad:Q",
-        color="Género:N",
-        tooltip=["Género", "Cantidad", "Porcentaje"]
+        theta=alt.Theta(field="Porcentaje", type="quantitative"),
+        color=alt.Color(field="Género", type="nominal"),
+        tooltip=["Género", "Porcentaje"]
     ).properties(width=400, height=400)
     st.altair_chart(chart_genero)
 
-    # 🔹 INTENCIÓN DE VOTO POR GÉNERO
+    # INTENCIÓN DE VOTO POR GÉNERO
     st.subheader("🗳️ Intención de voto por género")
     voto_genero = df.groupby(["p3", "p4"]).size().reset_index(name="Cantidad")
     chart_vg = alt.Chart(voto_genero).mark_bar().encode(
-        x=alt.X("p4:N", title="Candidato"),
-        y="Cantidad:Q",
-        color="p3:N",
-        column=alt.Column("p3:N", title="Género"),
-        tooltip=["p3", "p4", "Cantidad"]
-    ).properties(width=180, height=300)
+        x='p4:N',
+        y='Cantidad:Q',
+        color='p3:N',
+        column='p3:N',
+        tooltip=['p3', 'p4', 'Cantidad']
+    ).properties(width=160, height=300)
     st.altair_chart(chart_vg, use_container_width=True)
 
-    # 🔹 INTENCIÓN DE VOTO POR RANGO DE EDAD
+    # INTENCIÓN DE VOTO POR EDAD
     st.subheader("📈 Intención de voto por rango de edad")
     voto_edad = df.groupby(["RangoEdad", "p4"]).size().reset_index(name="Cantidad")
     chart_ve = alt.Chart(voto_edad).mark_bar().encode(
-        x=alt.X("p4:N", title="Candidato"),
-        y="Cantidad:Q",
-        color="RangoEdad:N",
-        column=alt.Column("RangoEdad:N", title="Edad"),
-        tooltip=["RangoEdad", "p4", "Cantidad"]
-    ).properties(width=180, height=300)
+        x='p4:N',
+        y='Cantidad:Q',
+        color='RangoEdad:N',
+        column='RangoEdad:N',
+        tooltip=['RangoEdad', 'p4', 'Cantidad']
+    ).properties(width=160, height=300)
     st.altair_chart(chart_ve, use_container_width=True)
 
-    # 🔹 INTENCIÓN DE VOTO GENERAL
+    # INTENCIÓN DE VOTO GENERAL
     st.subheader("📌 Intención de voto general")
-    voto_total = df["p4"].value_counts().reset_index()
-    voto_total.columns = ["Candidato", "Cantidad"]
-    voto_total["Porcentaje"] = (voto_total["Cantidad"] / voto_total["Cantidad"].sum() * 100).round(2)
+    voto_total = df["p4"].value_counts(normalize=True).reset_index()
+    voto_total.columns = ["Candidato", "Porcentaje"]
+    voto_total["Porcentaje"] = (voto_total["Porcentaje"] * 100).round(2)
     st.dataframe(voto_total)
 
     chart_voto = alt.Chart(voto_total).mark_bar().encode(
-        x="Candidato:N",
-        y="Cantidad:Q",
-        color="Candidato:N",
-        tooltip=["Candidato", "Cantidad", "Porcentaje"]
+        x="Candidato",
+        y="Porcentaje",
+        color="Candidato",
+        tooltip=["Candidato", "Porcentaje"]
     ).properties(width=600)
     st.altair_chart(chart_voto, use_container_width=True)
 
-    # 🔹 SATISFACCIÓN CON EL GOBIERNO
+    # NIVEL DE SATISFACCIÓN
     st.subheader("📊 Satisfacción con el gobierno")
-    satisf = df["p5"].value_counts().reset_index()
-    satisf.columns = ["Satisfacción", "Cantidad"]
-    satisf["Porcentaje"] = (satisf["Cantidad"] / satisf["Cantidad"].sum() * 100).round(2)
+    satisf = df["p5"].value_counts(normalize=True).reset_index()
+    satisf.columns = ["Satisfacción", "Porcentaje"]
+    satisf["Porcentaje"] = (satisf["Porcentaje"] * 100).round(2)
     st.dataframe(satisf)
 
     chart_satis = alt.Chart(satisf).mark_arc(innerRadius=40).encode(
-        theta="Cantidad:Q",
-        color="Satisfacción:N",
-        tooltip=["Satisfacción", "Cantidad", "Porcentaje"]
+        theta="Porcentaje",
+        color="Satisfacción",
+        tooltip=["Satisfacción", "Porcentaje"]
     ).properties(width=400, height=400)
     st.altair_chart(chart_satis)
 
-    # 🔹 PROBLEMAS PRINCIPALES
+    # PROBLEMAS PRINCIPALES
     st.subheader("🚨 Principales problemas mencionados")
     problemas = df["p6"].value_counts().reset_index()
     problemas.columns = ["Problema", "Cantidad"]
